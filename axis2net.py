@@ -1,17 +1,21 @@
-import sys
-import os.path
+import sys, os.path, argparse
 from scapy.all import *
 
+def parse_args():
+	parser = argparse.ArgumentParser()
+	parser.add_argument('--o', metavar='output_path', dest='output_path', help='specify path of output *.pcap file', default='out_pkts.pcap',  required=False)
+	parser.add_argument('input_path', metavar='input_path',  help='specify path of input file traffic dump')
+	args = parser.parse_args()
+	return(args)
 
-if (os.path.exists(sys.argv[1]) and re.match(r'\.txt$', sys.argv[1], flags=re.IGNORECASE)):
-    out_file = os.path.split(sys.argv[1])[0] + re.sub(r'\.txt$', '.pcap', os.path.split(sys.argv[1])[1], flags=re.IGNORECASE)
+def wr_dump(in_txt, out_pcap):
+	text_dump = open(in_txt, 'r')
+	for i in text_dump:
+		hex_str = i.split('\n')[0]
+		hex_str = hex_str.replace('\r', '')
+		current_packet = Ether(hex_bytes(hex_str))
+		wrpcap(out_pcap, current_packet, append=True)
 
-
-text_dump = open('outp.txt', 'r')
-
-
-for i in text_dump:
-    hex_str = hex_str.replace('\r', '')
-    hex_str = i.split('\n')[0]
-    current_packet = Ether(hex_bytes(hex_str))
-    wrpcap('outp.pcap', current_packet, append=True)
+if __name__ == '__main__':
+	args = parse_args()
+	wr_dump(args.input_path, args.output_path)
